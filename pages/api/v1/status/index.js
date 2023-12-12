@@ -4,14 +4,29 @@ const os = require("os");
 async function status(request, response) {
   const updatedAt = new Date().toISOString();
 
+  // PG version
   const pgVersion = await database.query("SHOW server_version;");
   const databaseVersionValue = pgVersion.rows[0].server_version;
 
-  const pgConnCount = await database.query(
-    "SELECT count(*) FROM pg_stat_activity;",
+  //Opened Connections
+  // count()
+  // ::int
+  const databaseOpenedConnectionsResult = await database.query(
+    "SELECT count(*)::int from pg_stat_activity WHERE datname='local_db';",
   );
-  const databaseCurrenConnectionsValue = pgConnCount.rows[0].count;
 
+  const databaseOpenedConnectionsValue =
+    databaseOpenedConnectionsResult.rows[0].count;
+
+  // Max Conections
+  const databaseMaxConnectionsResult = await database.query(
+    "SELECT current_setting('max_connections');",
+  );
+
+  const databaseMaxConnectionsValue =
+    databaseMaxConnectionsResult.rows[0].current_setting;
+
+  // System Uptime
   const systemUptime = os.uptime();
 
   response.status(200).json({
@@ -19,7 +34,8 @@ async function status(request, response) {
     dependencies: {
       database: {
         version: databaseVersionValue,
-        currntConnections: databaseCurrenConnectionsValue,
+        max_connections: parseInt(databaseMaxConnectionsValue),
+        opened_connections: parseInt(databaseOpenedConnectionsValue),
       },
     },
     system: {
