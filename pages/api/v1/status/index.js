@@ -8,12 +8,16 @@ async function status(request, response) {
   const pgVersion = await database.query("SHOW server_version;");
   const databaseVersionValue = pgVersion.rows[0].server_version;
 
+  const databaseName = process.env.POSTGRES_DB;
+
+  console.log(`Banco de dados: ${databaseName}`);
   //Opened Connections
   // count()
   // ::int
-  const databaseOpenedConnectionsResult = await database.query(
-    "SELECT count(*)::int from pg_stat_activity WHERE datname='local_db';",
-  );
+  const databaseOpenedConnectionsResult = await database.query({
+    text: "SELECT count(*)::int from pg_stat_activity WHERE datname=$1;",
+    values: [databaseName],
+  });
 
   const databaseOpenedConnectionsValue =
     databaseOpenedConnectionsResult.rows[0].count;
