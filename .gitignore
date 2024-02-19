@@ -1,5 +1,5 @@
+.env*
+.env.development
 .next
 node_modules
 temp
-.env
-.env.development
